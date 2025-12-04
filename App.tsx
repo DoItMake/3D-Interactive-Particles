@@ -12,7 +12,8 @@ const App: React.FC = () => {
     scale: 1,
     isFist: false,
     handPresent: false,
-    colorBurstTrigger: 0
+    colorBurstTrigger: 0,
+    cursor: { x: 0, y: 0 }
   });
 
   const handleUpdate = useCallback((newState: InteractionState) => {
