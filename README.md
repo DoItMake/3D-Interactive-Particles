@@ -1,20 +1,53 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1QhGhABsoUBq8E70-l5MIw32AMKlBfe7O
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+这是一个基于 React、Three.js (React Three Fiber) 和 MediaPipe 构建的 Web 3D 圣诞主题互动应用。它将原本的粒子系统改造为一棵互动的圣诞树，并通过计算机视觉实现无接触的手势控制。
+以下是所有具体实现及功能的详细描述：
+1. 核心视觉系统 (Visual System)
+视觉部分完全基于 WebGL (Three.js) 渲染，营造沉浸式的节日氛围。
+粒子圣诞树 (Particle Christmas Tree):
+数学生成: 不再使用简单的球体，而是基于圆锥体数学公式生成粒子分布。
+Radius = (1 - Height/MaxHeight) * BaseRadius
+粒子在圆锥表面和内部随机分布，模拟松针和树叶。
+双层着色: 粒子分为基础深绿色 (#0f5c28) 和高光嫩绿色 (#4ade80)，并混入随机颜色的“彩灯”粒子（红、金、蓝、白）。
+闪烁动画: 每一帧都会计算粒子属性，模拟圣诞彩灯的微弱闪烁效果。
+互动礼物盒 (Interactive 3D Gifts):
+生成逻辑: 在树的枝叶间（基于树的圆锥半径计算位置）随机生成 15 个礼物盒。
+状态变化:
+闭合状态: 显示为包装精美的盒子（带丝带）。
+悬停状态: 当手势光标靠近时，盒子会放大 (Scale 1.2) 并发光，提供视觉反馈。
+打开状态: 触发后，盒子消失，并在原位生成爆炸的粒子特效 (Sparkles) 和一个随机的 3D 几何体玩具（环形结、二十面体等），并在空中漂浮旋转。
+环境氛围:
+背景: 深邃的夜空背景色 (#020617)。
+特效: 包含远处的星星 (Stars) 和前景飘落的雪花/光尘 (Sparkles)。
+光照: 组合了环境光、点光源（模拟树顶星光）和聚光灯，营造温馨的节日夜晚光感。
+2. 手势交互系统 (Gesture Interaction Engine)
+核心控制器 HandController.tsx 使用 Google 的 MediaPipe 实时分析摄像头画面，提取手部 21 个关键点。
+光标追踪 (Cursor Tracking):
+算法: 追踪手掌中心（Landmark 9）的位置。
+映射: 将摄像头坐标（0~1）映射到 3D 场景坐标系。进行了 X 轴镜像翻转（像照镜子一样），并增加了灵敏度系数 (SENSITIVITY = 1.5)，让用户无需大幅度挥手即可覆盖全屏。
+平滑处理: 使用线性插值 (Lerp) 平滑光标移动，消除摄像头抖动。
+视觉反馈: 屏幕上显示一个 3D 光环跟随手部移动。
+手势模式识别 (State Machine):
+IDLE (空闲): 未检测到手。
+SELECT (选择模式): 五指张开。控制 3D 光标移动，用于寻找礼物。光标显示为青色。
+OPEN (打开/确认): 握拳。当光标位于礼物上方并握拳时，触发 isFist 事件，打开礼物。光标变为红色。
+ROTATE (旋转视角): 仅伸出食指。锁定光标位置，通过手指的移动来旋转整棵圣诞树，查看树背面的礼物。
+ROTATE Z (平面旋转): 伸出食指和中指 (V字)。计算双指角度变化，控制树的 Z 轴倾斜（虽然在圣诞树场景中主要使用前两种手势，但此功能保留）。
+防抖机制: 引入了 MODE_LOCK_THRESHOLD，只有连续 4 帧检测到相同手势才会切换模式，防止手指快速运动时的误判。
+3. 碰撞检测与交互逻辑 (Physics & Logic)
+为了在 3D 空间中准确选取礼物，实现了轻量级的物理检测：
+光线投射 (Raycasting) 的简化替代:
+并未每一帧都发射真实的物理射线（消耗性能），而是计算 3D 光标位置 与 礼物世界坐标 之间的欧几里得距离。
+坐标转换: 礼物的局部坐标会根据树的旋转角度实时转换为世界坐标。
+判定阈值: 当距离 < 1.2 单位时，判定为“悬停 (Hover)”。
+4. 用户界面 (HUD)
+UI 层 HUD.tsx 提供了直观的操作引导：
+状态反馈: 实时显示当前手势模式（SELECT / OPEN / VIEW）。
+引导提示: 中文提示用户“五指张开移动光标”、“握拳打开礼物”。
+信号指示灯: 显示摄像头是否成功捕捉到手部信号。
+视觉风格: 采用半透明毛玻璃 (backdrop-blur) 和霓虹发光边框，结合节日红绿配色，既有科技感又契合圣诞主题。
+5. 技术栈总结
+前端框架: React 19
+3D 引擎: Three.js + React Three Fiber (声明式 3D 编程)
+AI 视觉: @mediapipe/tasks-vision (WASM 加速，GPU 推理)
+样式: Tailwind CSS (快速构建 UI)
+图标: Lucide React
+这个系统展示了如何将先进的计算机视觉技术与 Web 3D 图形学结合，创造出无需鼠标键盘的自然人机交互体验 (NUI)。
