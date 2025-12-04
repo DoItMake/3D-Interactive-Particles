@@ -1,0 +1,7 @@
+{
+  "name": "Nebula Hand Control",
+  "description": "A high-performance 3D particle system controlled by advanced hand gestures using MediaPipe and Three.js.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
